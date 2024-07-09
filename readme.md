@@ -511,5 +511,101 @@ app.config.from_mapping(
 ````
 
 ## Validar datos con WTForm:
-### Necesitamos importar ``from wtforms.validators import DataRequired, Length
+### Necesitamos importar ``from wtforms.validators import DataRequired, Length``
 ### DataRequired: dato requerido si o si para validar.<br>Length: requiere que cumpla la condicion de tantas letras para validar.
+
+````py
+class RegisterForm(FlaskForm):
+    username= StringField(
+        "Nombre de usuario: ", validators= [DataRequired(), Length(min=4, max=25)]
+    )
+    password= PasswordField(
+        "Contrasenia: ", validators= [DataRequired(), Length(min=6, max=40)]
+    )
+    submit= SubmitField("Registrar: ")
+````
+
+## <a><u> Blueprints: </a></u>
+
+## Que son los Blueprints?
+### Los Blueprints en Flask son una manera de organizar y estructurar apps web grandes, permitiendo que se dividan en componentes modulares y reutilizables.
+### Usar Blueprints puede ayudar a mantener el codigo limpio y manejable, facilitando el desarrollo y mantenimiento de la app.
+### Necesitamos importar blueprint: ``from flask import Blueprint``.<br>Y crear la config ``bp = Blueprint('myapp', __name__, url_prefix='/myapp')``.<br>``url_prefix('')`` es el URL inicial por donde van a iniciar las rutas de las vistas.
+### Por ej:
+````py
+bp = Blueprint('myapp', __name__, url_prefix='/myapp')
+
+@bp.route('/list')
+def index():
+    return 'Lista de tareas'
+````
+## Como registrar los blueprints?
+### Necesitamos registrar las blueprints en el ``__init__.py``.
+````py
+from . import MY-APP
+app.register_blueprint(myapp.bp)
+````
+
+## Buenas practicas:
+### Guardar las dependencias usadas desde el entorno con:<br> ``pip freeze > requirements.txt``.<br>Para instalar las dependecias marcadas en el ``requirements.txt`` utiliza:<br>``pip install -r requirements.txt``.
+
+## <a><u> Flask-SQLAlchemy: </a></u>
+
+### Flask-SQLAlchemy es una extension para Flask que facilita el uso de SQLAlchemy.
+
+## Que es SQLAlchemy?
+
+### SQLAlchemy es un ORM (Object-Relational Mapping) que permite interactuar con bases de datos de manera mas intuitiva y natural utilizando objetos de Python en lugar de escribir consultas SQL directamente.
+
+## Ventajas:
+1. ### Integración Sencilla:
+    * #### Integra SQLAlchemy con Flask de manera facil, manejando automaticamente la configuración de la base de datos y proporcionando una API coherente y conveniente.
+2. ### ORM Poderoso:
+    * #### Permite trabajar con bases de datos utilizando clases y objetos de Python, lo que simplifica la escritura y el mantenimiento del codigo.
+3. ### Soporte para Varias Bases de Datos:
+    * #### Compatible con una variedad de bases de datos como SQLite, MySQL, PostgreSQL, y mas, permitiendo cambiar de base de datos con una minima configuracion.
+4. ### Manejo Automático de Sesiones:
+    * #### Gestiona automaticamente las sesiones de la base de datos, facilitando las transacciones y el manejo de conexiones.
+
+## Instalamos y configuramos SQLAlchemy:
+### Instalamos desde entorno con ``pip install Flask-SQLAlchemy``.
+### En el ``__init__.py`` de la app agregamos la configuracion y importamos.<br>Creamos una extension ``db= SQLAlchemy``.<br>Configuramos con ``SQLALCHEMY_DATABASE_URI= ""``<br>Y inicializamos la conexion a la base de datos con ``db.init_app(app)``
+````py
+from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
+
+db= SQLAlchemy()
+
+def create_app():
+
+    app = Flask(__name__)
+
+    app.config.from_mapping(
+        DEBUG= True,
+        SECRET_KEY= 'dev',
+        SQLALCHEMY_DATABASE_URI= "'mysql+pymysql://username:password@localhost/database_name'"
+    )
+
+    db.init_app(app)
+
+    from . import myapp
+    app.register_blueprint(myapp.bp)
+
+    from . import auth
+    app.register_blueprint(auth.bp)
+
+    @app.route('/')
+    def index():
+        return render_template('index.html')
+    
+    return app
+````
+### Para migrar todos los modelos creados en la app a la base de datos, se utiliza:
+````py
+# ...
+
+with app.app_context():
+    db.create_all()
+
+    return app
+````
